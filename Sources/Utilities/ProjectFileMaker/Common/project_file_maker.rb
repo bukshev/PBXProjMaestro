@@ -25,17 +25,32 @@
 require_relative '../../../../Sources/Utilities/ProjectFileMaker/Deserializers/build_file_section_deserializer'
 require_relative '../../../../Sources/Utilities/ProjectFileMaker/Deserializers/build_phase_section_deserializer'
 
+# TODO: Create single interface for all deserializers.
 class ProjectFileMaker
   def project_file(file_path)
     # Read all lines from .pbxproj file.
     pbxproj_lines = File.read(file_path, encoding: 'utf-8').freeze
 
-    # Deserialize build file section.
-    build_file_lines = section_regex('PBXBuildFile').match(pbxproj_lines).to_s
-    pbx_build_files = BuildFileSectionDeserializer.entity(build_file_lines)
+    # Deserialize PBXBuildFile section.
+    # build_file_lines = section_regex('PBXBuildFile').match(pbxproj_lines).to_s
+    # pbx_build_files = BuildFileSectionDeserializer.entity(build_file_lines)
 
-    lines = section_regex('PBXResourcesBuildPhase').match(pbxproj_lines).to_s
-    BuildPhaseSectionDeserializer.entity(lines)
+    # Deserialize BuildPhase sections to one abstract.
+    build_phase = BuildPhaseSectionDeserializer.entity(pbxproj_lines)
+
+    # TODO: Deserialize PBXContainerItemProxy section.
+
+    # TODO: Deserialize PBXFileElement section.
+
+    # TODO: Deserialize PBXTarget sections to one abstract.
+
+    # TODO: Deserialize PBXProject section.
+
+    # TODO: Deserialize PBXTargetDependency section.
+
+    # TODO: Deserialize XCBuildConfiguration section.
+
+    # TODO: Deserialize XCConfigurationList section.
   end
 
   def section_regex(name)

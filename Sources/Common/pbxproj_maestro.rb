@@ -22,22 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require_relative '../../../Model/ProjectFile/Elements/BuildFile/pbx_build_file'
+require_relative '../Utilities/ProjectFileMaker/Common/project_file_maker'
 
-# Build PBXBuildFile entity.
-class BuildFileSectionDeserializer
-  # @return [PBXBuildFile]
-  def self.entity(lines)
-    # .0: reference
-    # .1: build_file_name
-    # .2: isa
-    # .3: file_ref
-    # .4: settings (currently always nil)
-    regexp_str = '([0-9A-Za-z]{1,}).\/\*.([0-9A-Za-z]{1,}.*).in.*.isa\s=\s([0-9A-Za-z]{1,}).\sfileRef\s=\s([0-9A-Za-z]{1,})'
-    regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
-
-    lines.scan(regexp).map do |data|
-      PBXBuildFile.new(data[0], data[1], data[2], data[3], nil)
-    end
-  end
-end
+ProjectFileMaker.new.project_file('../../Resources/ABCProject.xcodeproj/project.pbxproj')

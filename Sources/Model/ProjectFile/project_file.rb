@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# TODO: Remove all personal identifiers from comments.
-
 # MIT License
 #
 # Copyright (c) 2019 Ivan Bukshev
@@ -28,7 +26,7 @@
 #
 # Root Element
 # PBXBuildFile
-# PBXBuildPhase
+# PBXBuildPhase (abstract)
 # -- PBXAppleScriptBuildPhase
 # -- PBXCopyFilesBuildPhase
 # -- PBXFrameworksBuildPhase

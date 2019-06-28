@@ -29,6 +29,11 @@ class PBXCopyFilesBuildPhase
   #   @return [UUID]
   attr_reader :reference
 
+  # @!attribute [r] name
+  #   Name after UUID in comment section.
+  #   @return [String]
+  attr_reader :name
+
   # @!attribute [r] isa
   #   @return [PBXCopyFilesBuildPhase]
   attr_reader :isa
@@ -59,6 +64,7 @@ class PBXCopyFilesBuildPhase
   attr_reader :run_only_for_deployment_postprocessing
 
   def initialize(reference,
+                 name,
                  isa,
                  build_action_mask,
                  dst_path,
@@ -67,6 +73,7 @@ class PBXCopyFilesBuildPhase
                  run_only_for_deployment_postprocessing)
 
     @reference = reference
+    @name = name
     @isa = isa
     @build_action_mask = build_action_mask
     @dst_path = dst_path

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 #  pbx_build_file.rb
-#  PBXProjOptimizer
+#  PBXProjMaestro
 #
 # MIT License
 #

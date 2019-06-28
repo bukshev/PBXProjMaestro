@@ -2,7 +2,7 @@
 
 #
 #  pbx_aggregate_target.rb
-#  PBXProjOptimizer
+#  PBXProjMaestro
 #
 #  Created by Ivan Bukshev on 01/04/2019.
 #  Copyright © 2019 Team Absurdum. All rights reserved.

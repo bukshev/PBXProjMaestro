@@ -22,6 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require_relative '../Utilities/ProjectFileMaker/Common/project_file_maker'
-
-ProjectFileMaker.new.project_file('../../ABCProject.xcodeproj/project.pbxproj')
+class SectionHighlighter
+  # Highlight specific section lines from .pbxproj file lines.
+  # @return [String]
+  def self.section_lines(pbxproj_lines, section_name)
+    reg_str = "\/\*.Begin.#{section_name}.section.*.((\n.*){1,})...End.#{section_name}.section.\*\/"
+    regexp = Regexp.new(reg_str, Regexp::IGNORECASE)
+    pbxproj_lines.scan(regexp)[0]
+  end
+end
