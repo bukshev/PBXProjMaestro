@@ -258,6 +258,53 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+        3B8C0073207239AA0072A8C6 /* Embed Frameworks */ = {
+            isa = PBXCopyFilesBuildPhase;
+            buildActionMask = 2147483647;
+            dstPath = "";
+            dstSubfolderSpec = 10;
+            files = (
+                124470E5219C10690004F8A1 /* MockServer.framework in Embed Frameworks */,
+                866540F72194038E00D3629E /* MTUIKit.framework in Embed Frameworks */,
+                0635007B2187505E00F74F0F /* FTCFeeSDK.framework in Embed Frameworks */,
+                3B2576B4210EB94C0040804D /* QpayApi.framework in Embed Frameworks */,
+                9E0D711622BA1AE3009D2B93 /* AnalyticsKit.framework in Embed Frameworks */,
+                9D571EC720BD62420012FA8E /* EdaSDK.framework in Embed Frameworks */,
+                3BBE9AA620D7BF7F005CF978 /* FTCCardData.framework in Embed Frameworks */,
+            );
+            name = "Embed Frameworks";
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        3BE54644207B0FE1004490A6 /* Embed Frameworks */ = {
+            isa = PBXCopyFilesBuildPhase;
+            buildActionMask = 2147483647;
+            dstPath = "";
+            dstSubfolderSpec = 10;
+            files = (
+                9DE6062D21CCD02800CD0BBA /* EdaSDK.framework in Embed Frameworks */,
+                2A9587C921FEFB1A0092FB99 /* MockServer.framework in Embed Frameworks */,
+                866540F8219403EF00D3629E /* MTUIKit.framework in Embed Frameworks */,
+                060BEF072187603A0074FCE6 /* FTCFeeSDK.framework in Embed Frameworks */,
+                9E0D711922BA1D25009D2B93 /* AnalyticsKit.framework in Embed Frameworks */,
+                9DE6062F21CCD02800CD0BBA /* QpayApi.framework in Embed Frameworks */,
+                3BBE9AA820D7BF88005CF978 /* FTCCardData.framework in Embed Frameworks */,
+            );
+            name = "Embed Frameworks";
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+        B7CD665922045C1100BAB14F /* CopyFiles */ = {
+            isa = PBXCopyFilesBuildPhase;
+            buildActionMask = 2147483647;
+            dstPath = "";
+            dstSubfolderSpec = 10;
+            files = (
+                B7CD665A22045C2600BAB14F /* MockServer.framework in CopyFiles */,
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXResourcesBuildPhase section */
 		F485BA5D22532463006DA0D5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;

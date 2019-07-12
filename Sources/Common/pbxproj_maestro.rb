@@ -24,4 +24,5 @@
 
 require_relative '../Utilities/ProjectFileMaker/Common/project_file_maker'
 
-ProjectFileMaker.new.project_file('../../ABCProject.xcodeproj/project.pbxproj')
+file_path = '/Users/travismurdoc/Documents/Projects/Ruby/PBXProjMaestro/Resources/ABCProject.xcodeproj/project.pbxproj'
+ProjectFileMaker.new.project_file(file_path)

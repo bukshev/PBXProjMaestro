@@ -39,11 +39,11 @@ class BuildPhaseSectionDeserializer
   def self.entity(lines)
     # apple_scripts = apple_scripts(lines)
     # puts apple_scripts
-    # copy_files = copy_files(lines)
-    # puts copy_files
+    copy_files = copy_files(lines)
+    puts copy_files
 
-    frameworks = frameworks(lines)
-    puts frameworks
+    # frameworks = frameworks(lines)
+    # puts frameworks
     #
     # headers = headers(lines)
     # puts headers
@@ -78,6 +78,7 @@ class BuildPhaseSectionDeserializer
     copy_files = []
 
     section_lines = SectionHighlighter.section_lines(lines, 'PBXCopyFilesBuildPhase')
+
     regexp = Regexp.new(MaestroRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
     section_lines.scan(regexp).each do |match|
       reference = match[0].delete("\r\t\n ")
