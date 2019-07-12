@@ -28,6 +28,6 @@ class SectionHighlighter
   def self.section_lines(pbxproj_lines, section_name)
     reg_str = "\/\*.Begin.#{section_name}.section.*.((\n.*){1,})...End.#{section_name}.section.\*\/"
     regexp = Regexp.new(reg_str, Regexp::IGNORECASE)
-    pbxproj_lines.scan(regexp)[0]
+    pbxproj_lines.scan(regexp)[0][0]
   end
 end

@@ -31,16 +31,17 @@ require_relative '../../../Model/ProjectFile/Elements/BuildPhase/Subelements/pbx
 require_relative '../../../Model/ProjectFile/Elements/BuildPhase/Subelements/pbx_sources_build_phase'
 require_relative '../../../Model/ProjectFile/Elements/BuildPhase/pbx_build_phase'
 require_relative '../../../../Sources/Utilities/ProjectFileMaker/Common/section_highlighter'
+require_relative '../../../../Sources/Common/pbxproj_regexps'
+require_relative '../../../../Sources/Model/ProjectFile/Elements/Common/list_file_reference'
 
 class BuildPhaseSectionDeserializer
   # @return [PBXBuildPhase]
   def self.entity(lines)
     # apple_scripts = apple_scripts(lines)
     # puts apple_scripts
-
     copy_files = copy_files(lines)
-    # puts copy_files
-    #
+    puts copy_files
+
     # frameworks = frameworks(lines)
     # puts frameworks
     #
@@ -67,43 +68,52 @@ class BuildPhaseSectionDeserializer
 
   # @return [PBXAppleScriptBuildPhase]
   def self.apple_scripts(lines)
-    # .0: reference
-    # .1: isa
-    # .2: build_action_mask
-    # .3: files
-    # .4: @run_only_for_deployment_postprocessing (currently always 0)\
-    # regexp_str = ''
-    # regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
-
     # TODO: Temporary unavailable. Try to add apple script to pbxproj.
     # TODO: Use nil-object pattern for cases like this?
-    # lines.scan(regexp).map do |data|
-    #   PBXAppleScriptBuildPhase.new(data[0], data[1], data[2], data[3].map(&:strip), 0)
-    # end
-
     nil
   end
 
   # @return [PBXCopyFilesBuildPhase]
   def self.copy_files(lines)
+    copy_files = []
+
     section_lines = SectionHighlighter.section_lines(lines, 'PBXCopyFilesBuildPhase')
 
-    # .0: reference
-    # .1: build_file_name
-    # .2: isa
-    # .3: file_ref
-    # .4: settings (currently always nil)
-    regexp_str = '([0-9A-Za-z]{1,}).\/\*.([0-9A-Za-z\s]{1,}).\*\/.=.\{'
-    regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
+    regexp = Regexp.new(MaestroRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
+    section_lines.scan(regexp).each do |match|
+      reference = match[0].delete("\r\t\n ")
+      reference_comment = match[1].delete("\r\t\n")
 
-    puts '------------------------'
-    puts section_lines
-    puts '------------------------'
+      subsection = match[2]
+      isa = subsection.match(Regexp.new(MaestroRegexp::ISA_LINE, Regexp::IGNORECASE))[1]
+      buildActionMask = subsection.match(Regexp.new(MaestroRegexp::BUILD_ACTION_MASK, Regexp::IGNORECASE))[1]
+      dstPath = subsection.match(Regexp.new(MaestroRegexp::DST_PATH, Regexp::IGNORECASE))[1]
+      dstSubfolderSpec = subsection.match(Regexp.new(MaestroRegexp::DST_SUBFOLDER_SPEC, Regexp::IGNORECASE))[1]
+      files_lines = subsection.match(Regexp.new(MaestroRegexp::FILES_LIST, Regexp::IGNORECASE))[0]
 
-    # lines.scan(regexp).map do |data|
-    #   PBXCopyFilesBuildPhase.new(data[0], data[1], data[2], data[3], data[4],
-    #                              data[5], data[6])
-    # end
+      files = []
+      files_lines.scan(Regexp.new(MaestroRegexp::LIST_FILE_REFERENCE, Regexp::IGNORECASE)) { |match|
+        file_ref = match[0].delete("\r\t\n ")
+        file_name = match[1]
+        file_location = match[2]
+        files.push ListFileReference.new(file_ref, file_name, file_location)
+      }
+
+      # TODO: Parse optional name field here. Currently send reference_comment.
+      runOnlyForDeploymentPostprocessing = subsection.match(Regexp.new(MaestroRegexp::RUN_ONLY_FOR_DEPLOYMENT_POSTPROCESSING, Regexp::IGNORECASE))[1].to_i
+
+      copy_files.push PBXCopyFilesBuildPhase.new(reference,
+                                                 reference_comment,
+                                                 isa,
+                                                 buildActionMask,
+                                                 dstPath,
+                                                 dstSubfolderSpec,
+                                                 files,
+                                                 reference_comment,
+                                                 runOnlyForDeploymentPostprocessing)
+    end
+
+    copy_files
   end
 
   # @return [PBXBuildPhase]

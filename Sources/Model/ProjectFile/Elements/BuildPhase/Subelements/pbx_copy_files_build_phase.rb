@@ -29,10 +29,10 @@ class PBXCopyFilesBuildPhase
   #   @return [UUID]
   attr_reader :reference
 
-  # @!attribute [r] name
+  # @!attribute [r] reference_comment
   #   Name after UUID in comment section.
   #   @return [String]
-  attr_reader :name
+  attr_reader :reference_comment
 
   # @!attribute [r] isa
   #   @return [PBXCopyFilesBuildPhase]
@@ -53,10 +53,15 @@ class PBXCopyFilesBuildPhase
   attr_reader :dst_subfolder_spec
 
   # @!attribute [r] files
-  #   A list of element reference.
-  #   The objects are a reference to a PBXBuildFile element.
-  #   @return [List]
+  #   A list of element reference (#ListFileReference).
+  #   The objects are a reference to a #PBXBuildFile element.
+  #   @return [List of #ListFileReference]
   attr_reader :files
+
+  # @!attribute [r] name
+  #   Section name. Can be same as #reference_comment.
+  #   @return [String]
+  attr_reader :name
 
   # @!attribute [r] run_only_for_deployment_postprocessing
   #   Default value: 0
@@ -64,21 +69,23 @@ class PBXCopyFilesBuildPhase
   attr_reader :run_only_for_deployment_postprocessing
 
   def initialize(reference,
-                 name,
+                 reference_comment,
                  isa,
                  build_action_mask,
                  dst_path,
                  dst_subfolder_spec,
                  files,
+                 name,
                  run_only_for_deployment_postprocessing)
 
     @reference = reference
-    @name = name
+    @reference_comment = reference_comment
     @isa = isa
     @build_action_mask = build_action_mask
     @dst_path = dst_path
     @dst_subfolder_spec = dst_subfolder_spec
     @files = files
+    @name = name
     @run_only_for_deployment_postprocessing = run_only_for_deployment_postprocessing
   end
 end
