@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+#  list_file_reference.rb
+#  PBXProjMaestro
+#
 # MIT License
 #
 # Copyright (c) 2019 Ivan Bukshev
@@ -22,28 +25,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require_relative '../../../../Sources/Utilities/ProjectFileMaker/Deserializers/build_file_section_deserializer'
-require_relative '../../../../Sources/Utilities/ProjectFileMaker/Deserializers/build_phase_section_deserializer'
+# Single simple FileRef description.
+# Can be contained in subsections fileRef-lists.
+# subsections.
+class ListFileReference
+  # @!attribute [r] reference
+  #   A 96 bits identifier.
+  #   @return [UUID]
+  attr_reader :reference
 
-class ProjectFileMaker
-  def project_file(file_path)
-    section_highlighter = SectionHighlighter.new
+  # @!attribute [r] file_name
+  #   File name in comment after general reference field.
+  #   @return [String]
+  attr_reader :file_name
 
-    # Read all lines from .pbxproj file.
-    pbxproj_lines = File.read(file_path, encoding: 'utf-8').freeze
+  # @!attribute [r] location
+  #   String destination which located in comment after general reference field.
+  #   @return [String]
+  attr_reader :location
 
-    # Deserialize build file section.
-    build_file_lines = section_regex('PBXBuildFile').match(pbxproj_lines).to_s
-    pbx_build_files = BuildFileSectionDeserializer.entity(build_file_lines)
-
-    lines = section_regex('PBXResourcesBuildPhase').match(pbxproj_lines).to_s
-    BuildPhaseSectionDeserializer.entity(lines)
+  def initialize(reference, file_name, location)
+    @reference = reference
+    @file_name = file_name
+    @location = location
   end
-
-  def section_regex(name)
-    reg_str = ".*.(Begin.#{name}.section).*(\n.*){1,}.*.(End.#{name}.section).*"
-    Regexp.new(reg_str, Regexp::IGNORECASE)
-  end
-
-  private :section_regex
 end
