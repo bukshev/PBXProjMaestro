@@ -30,10 +30,10 @@ class PBXFileReference
   #   @return [UUID]
   attr_reader :reference
 
-  # @!attribute [r] file_ref_name
+  # @!attribute [r] reference_comment
   #   Filename in comment after general reference field.
   #   @return [String]
-  attr_reader :file_ref_name
+  attr_reader :reference_comment
 
   # @!attribute [r] isa
   #   @return [PBXFileReference]
@@ -71,7 +71,7 @@ class PBXFileReference
   attr_reader :source_tree
 
   def initialize(reference,
-                 file_ref_name,
+                 reference_comment,
                  isa,
                  file_encoding,
                  explicit_file_type,
@@ -81,7 +81,7 @@ class PBXFileReference
                  source_tree)
 
     @reference = reference
-    @file_ref_name = file_ref_name
+    reference_comment = reference_comment
     @isa = isa
     @file_encoding = file_encoding
     @explicit_file_type = explicit_file_type

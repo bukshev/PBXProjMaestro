@@ -29,6 +29,11 @@ class PBXResourcesBuildPhase
   #   @return [UUID]
   attr_reader :reference
 
+  # @!attribute [r] reference_comment
+  #   Name after UUID in comment section.
+  #   @return [String]
+  attr_reader :reference_comment
+
   # @!attribute [r] isa
   #   @return [PBXResourcesBuildPhase]
   attr_reader :isa
@@ -50,12 +55,14 @@ class PBXResourcesBuildPhase
   attr_reader :run_only_for_deployment_postprocessing
 
   def initialize(reference,
+                 reference_comment,
                  isa,
                  build_action_mask,
                  files,
                  run_only_for_deployment_postprocessing)
 
     @reference = reference
+    @reference_comment = reference_comment
     @isa = isa
     @build_action_mask = build_action_mask
     @files = files

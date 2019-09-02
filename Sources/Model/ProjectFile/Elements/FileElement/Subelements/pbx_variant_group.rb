@@ -29,6 +29,11 @@ class PBXVariantGroup
   #   @return [UUID]
   attr_reader :reference
 
+  # @!attribute [r] reference_comment
+  #   Filename in comment after general reference field.
+  #   @return [String]
+  attr_reader :reference_comment
+
   # @!attribute [r] isa
   #   @return [PBXVariantGroup]
   attr_reader :isa
@@ -49,8 +54,9 @@ class PBXVariantGroup
   #   @return [String]
   attr_reader :source_tree
 
-  def initialize(reference, isa, children, name, source_tree)
+  def initialize(reference, reference_comment, isa, children, name, source_tree)
     @reference = reference
+    @reference_comment = reference_comment
     @isa = isa
     @children = children
     @name = name

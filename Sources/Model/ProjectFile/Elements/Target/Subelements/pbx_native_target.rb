@@ -16,8 +16,13 @@ class PBXNativeTarget
   #   @return [UUID]
   attr_reader :reference
 
+  # @!attribute [r] reference_comment
+  #   Name after UUID in comment section.
+  #   @return [String]
+  attr_reader :reference_comment
+
   # @!attribute [r] isa
-  #   @return [PBXNativeTarget]
+  #   @return PBXNativeTarget
   attr_reader :isa
 
   # @!attribute [r] build_configuration_list
@@ -31,6 +36,11 @@ class PBXNativeTarget
   #   The objects are a reference to a PBXBuildPhase element.
   #   @return [List]
   attr_reader :build_phases
+
+  # @!attribute [r] build_rules
+  #   A list of element reference.
+  #   @return [List]
+  attr_reader :build_rules
 
   # @!attribute [r] dependencies
   #   A list of element reference.
@@ -65,9 +75,11 @@ class PBXNativeTarget
   attr_reader :product_type
 
   def initialize(reference,
+                 reference_comment,
                  isa,
                  build_configuration_list,
                  build_phases,
+                 build_rules,
                  dependencies,
                  name,
                  product_install_path,
@@ -76,9 +88,11 @@ class PBXNativeTarget
                  product_type)
 
     @reference = reference
+    @reference_comment = reference_comment
     @isa = isa
     @build_configuration_list = build_configuration_list
     @build_phases = build_phases
+    @build_rules = build_rules
     @dependencies = dependencies
     @name = name
     @product_install_path = product_install_path

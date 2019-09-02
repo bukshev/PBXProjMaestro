@@ -41,7 +41,7 @@ class ListFileReference
 
   # @!attribute [r] location
   #   String destination which located in comment after general reference field.
-  #   @return [String]
+  #   @return [String] or @return nil
   attr_reader :location
 
   def initialize(reference, file_name, location)
