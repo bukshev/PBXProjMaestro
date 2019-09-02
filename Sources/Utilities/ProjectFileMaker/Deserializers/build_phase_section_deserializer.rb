@@ -29,6 +29,7 @@ require_relative '../../../Model/ProjectFile/Elements/BuildPhase/Subelements/pbx
 require_relative '../../../Model/ProjectFile/Elements/BuildPhase/Subelements/pbx_resources_build_phase'
 require_relative '../../../Model/ProjectFile/Elements/BuildPhase/Subelements/pbx_shell_script_build_phase'
 require_relative '../../../Model/ProjectFile/Elements/BuildPhase/Subelements/pbx_sources_build_phase'
+require_relative '../../../../Sources/Utilities/ProjectFileMaker/Common/safe_value_extractor'
 require_relative '../../../Model/ProjectFile/Elements/BuildPhase/pbx_build_phase'
 require_relative '../../../../Sources/Utilities/ProjectFileMaker/Common/section_highlighter'
 require_relative '../../../../Sources/Common/pbxproj_regexps'
@@ -37,37 +38,17 @@ require_relative '../../../../Sources/Model/ProjectFile/Elements/Common/list_fil
 class BuildPhaseSectionDeserializer
   # @return [PBXBuildPhase]
   def self.entity(lines)
-    # apple_scripts = apple_scripts(lines)
-    # puts apple_scripts
-    copy_files = copy_files(lines)
-    puts copy_files
-
-    # frameworks = frameworks(lines)
-    # puts frameworks
-    #
-    # headers = headers(lines)
-    # puts headers
-    #
-    # resources_phase = resources_phase(lines)
-    # puts resources_phase
-    #
-    # shell_scripts = shell_scripts(lines)
-    # puts shell_scripts
-    #
-    # sources = sources(lines)
-    # puts sources
-
-    # PBXBuildPhase.new(apple_scripts,
-    #                   copy_files,
-    #                   frameworks,
-    #                   headers,
-    #                   resources_phase,
-    #                   shell_scripts,
-    #                   sources)
+    PBXBuildPhase.new(apple_scripts(lines),
+                      copy_files(lines),
+                      frameworks(lines),
+                      headers(lines),
+                      resources_phase(lines),
+                      shell_scripts(lines),
+                      sources(lines))
   end
 
   # @return [PBXAppleScriptBuildPhase]
-  def self.apple_scripts(lines)
+  def self.apple_scripts(_lines)
     # TODO: Temporary unavailable. Try to add apple script to pbxproj.
     # TODO: Use nil-object pattern for cases like this?
     nil
@@ -77,119 +58,271 @@ class BuildPhaseSectionDeserializer
   def self.copy_files(lines)
     copy_files = []
 
-    section_lines = SectionHighlighter.section_lines(lines, 'PBXCopyFilesBuildPhase')
+    value_extractor = SafeValueExtractor.new
+    section_lines = SectionHighlighter.section_lines(lines, PBXSectionName::PBXCopyFilesBuildPhase)
+    regexp = Regexp.new(PBXRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
 
-    regexp = Regexp.new(MaestroRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
     section_lines.scan(regexp).each do |match|
       reference = match[0].delete("\r\t\n ")
       reference_comment = match[1].delete("\r\t\n")
 
       subsection = match[2]
-      isa = subsection.match(Regexp.new(MaestroRegexp::ISA_LINE, Regexp::IGNORECASE))[1]
-      buildActionMask = subsection.match(Regexp.new(MaestroRegexp::BUILD_ACTION_MASK, Regexp::IGNORECASE))[1]
-      dstPath = subsection.match(Regexp.new(MaestroRegexp::DST_PATH, Regexp::IGNORECASE))[1]
-      dstSubfolderSpec = subsection.match(Regexp.new(MaestroRegexp::DST_SUBFOLDER_SPEC, Regexp::IGNORECASE))[1]
-      files_lines = subsection.match(Regexp.new(MaestroRegexp::FILES_LIST, Regexp::IGNORECASE))[0]
+
+      isa = value_extractor.value(subsection,
+                                  PBXRegexp::ISA,
+                                  DefaultValue::STRING)
+
+      build_action_mask = value_extractor.value(subsection,
+                                                PBXRegexp::BUILD_ACTION_MASK,
+                                                -1)
+
+      dst_path = value_extractor.value(subsection,
+                                       PBXRegexp::DST_PATH,
+                                       DefaultValue::STRING)
+
+      dst_subfolder_spec = value_extractor.value(subsection,
+                                                 PBXRegexp::DST_SUBFOLDER_SPEC,
+                                                 DefaultValue::STRING)
 
       files = []
-      files_lines.scan(Regexp.new(MaestroRegexp::LIST_FILE_REFERENCE, Regexp::IGNORECASE)) { |match|
-        file_ref = match[0].delete("\r\t\n ")
-        file_name = match[1]
+      files_lines = value_extractor.value(subsection,
+                                          PBXRegexp::FILES_LIST,
+                                          DefaultValue::STRING)
+      files_lines.scan(Regexp.new(PBXRegexp::LIST_FILE_REFERENCE, Regexp::IGNORECASE)) { |match|
+        file_reference = match[0].delete("\r\t\n ")
+        file_reference_comment = match[1]
         file_location = match[2]
-        files.push ListFileReference.new(file_ref, file_name, file_location)
+        files.push ListFileReference.new(file_reference,
+                                         file_reference_comment,
+                                         file_location)
       }
 
-      # TODO: Parse optional name field here. Currently send reference_comment.
-      runOnlyForDeploymentPostprocessing = subsection.match(Regexp.new(MaestroRegexp::RUN_ONLY_FOR_DEPLOYMENT_POSTPROCESSING, Regexp::IGNORECASE))[1].to_i
+      name = value_extractor.value(subsection,
+                                   PBXRegexp::NAME,
+                                   DefaultValue::STRING)
+
+      run_only_for_deployment_postprocessing = value_extractor.value(subsection,
+                                                                     PBXRegexp::RUN_ONLY_FOR_DEPLOYMENT_POSTPROCESSING,
+                                                                     0)
 
       copy_files.push PBXCopyFilesBuildPhase.new(reference,
                                                  reference_comment,
                                                  isa,
-                                                 buildActionMask,
-                                                 dstPath,
-                                                 dstSubfolderSpec,
+                                                 build_action_mask,
+                                                 dst_path,
+                                                 dst_subfolder_spec,
                                                  files,
-                                                 reference_comment,
-                                                 runOnlyForDeploymentPostprocessing)
+                                                 name,
+                                                 run_only_for_deployment_postprocessing)
     end
 
     copy_files
   end
 
   # @return [PBXBuildPhase]
-  def self.frameworks(section_lines)
-    # .0: reference
-    # .1: isa
-    # .2: build_action_mask
-    # .3: files
-    # .4: @run_only_for_deployment_postprocessing (currently always 0)
-    regexp_str = '([0-9A-Za-z]{1,}).*\n.*.isa\s=\s([0-9A-Za-z]{1,}).*.\n.*.buildActionMask\s=\s([0-9A-Za-z]{1,}).*.\n.*.files\s=\s\(\n\s+([\s\S]*?(?=\n.*\);))'
-    regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
+  def self.frameworks(lines)
+    frameworks = []
+    value_extractor = SafeValueExtractor.new
 
-    section_lines.scan(regexp).map do |data|
-      PBXFrameworksBuildPhase.new(data[0], data[1], data[2], data[3].map(&:strip), 0)
+    section_lines = SectionHighlighter.section_lines(lines, PBXSectionName::PBXFrameworksBuildPhase)
+    regexp = Regexp.new(PBXRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
+
+    section_lines.scan(regexp).each do |match|
+      reference = match[0].delete("\r\t\n ")
+      reference_comment = match[1].delete("\r\t\n")
+
+      subsection = match[2]
+
+      isa = value_extractor.value(subsection,
+                                  PBXRegexp::ISA,
+                                  DefaultValue::STRING)
+
+      build_action_mask = value_extractor.value(subsection,
+                                                PBXRegexp::BUILD_ACTION_MASK,
+                                                -1)
+
+      files = []
+      files_lines = value_extractor.value(subsection,
+                                          PBXRegexp::FILES_LIST,
+                                          DefaultValue::STRING)
+      files_lines.scan(Regexp.new(PBXRegexp::LIST_FILE_REFERENCE, Regexp::IGNORECASE)) { |match|
+        file_reference = match[0].delete("\r\t\n ")
+        file_reference_comment = match[1]
+        file_location = match[2]
+        files.push ListFileReference.new(file_reference,
+                                         file_reference_comment,
+                                         file_location)
+      }
+
+      run_only_for_deployment_postprocessing = value_extractor.value(subsection,
+                                                                     PBXRegexp::RUN_ONLY_FOR_DEPLOYMENT_POSTPROCESSING,
+                                                                     0)
+
+      frameworks.push PBXFrameworksBuildPhase.new(reference,
+                                                  reference_comment,
+                                                  isa,
+                                                  build_action_mask,
+                                                  files,
+                                                  run_only_for_deployment_postprocessing)
     end
+
+    frameworks
   end
 
   # @return [PBXBuildPhase]
-  def self.headers(section_lines)
-    # .0: reference
-    # .1: isa
-    # .2: build_action_mask
-    # .3: files
-    # .4: @run_only_for_deployment_postprocessing (currently always 0)
-    regexp_str = '([0-9A-Za-z]{1,}).*\n.*.isa\s=\s([0-9A-Za-z]{1,}).*.\n.*.buildActionMask\s=\s([0-9A-Za-z]{1,}).*.\n.*.files\s=\s\(\n\s+([\s\S]*?(?=\n.*\);))'
-    regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
+  def self.headers(lines)
+    headers = []
+    value_extractor = SafeValueExtractor.new
 
-    section_lines.scan(regexp).map do |data|
-      PBXHeadersBuildPhase.new(data[0], data[1], data[2], data[3].map(&:strip), 0)
+    section_lines = SectionHighlighter.section_lines(lines, PBXSectionName::PBXHeadersBuildPhase)
+    regexp = Regexp.new(PBXRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
+
+    section_lines.scan(regexp).each do |match|
+      reference = match[0].delete("\r\t\n ")
+      reference_comment = match[1].delete("\r\t\n")
+
+      subsection = match[2]
+
+      isa = value_extractor.value(subsection,
+                                  PBXRegexp::ISA,
+                                  DefaultValue::STRING)
+
+      build_action_mask = value_extractor.value(subsection,
+                                                PBXRegexp::BUILD_ACTION_MASK,
+                                                -1)
+
+      files = []
+      files_lines = value_extractor.value(subsection,
+                                          PBXRegexp::FILES_LIST,
+                                          DefaultValue::STRING)
+      files_lines.scan(Regexp.new(PBXRegexp::LIST_FILE_REFERENCE, Regexp::IGNORECASE)) { |match|
+        file_reference = match[0].delete("\r\t\n ")
+        file_reference_comment = match[1]
+        file_location = match[2]
+        files.push ListFileReference.new(file_reference,
+                                         file_reference_comment,
+                                         file_location)
+      }
+
+      run_only_for_deployment_postprocessing = value_extractor.value(subsection,
+                                                                     PBXRegexp::RUN_ONLY_FOR_DEPLOYMENT_POSTPROCESSING,
+                                                                     0)
+
+      headers.push PBXResourcesBuildPhase.new(reference,
+                                              reference_comment,
+                                              isa,
+                                              build_action_mask,
+                                              files,
+                                              run_only_for_deployment_postprocessing)
     end
+
+    headers
   end
 
   # @return [PBXBuildPhase]
-  def self.resources_phase(section_lines)
-    # .0: reference
-    # .1: isa
-    # .2: build_action_mask
-    # .3: files
-    # .4: @run_only_for_deployment_postprocessing (currently always 0)
-    regexp_str = '([0-9A-Za-z]{1,}).*\n.*.isa\s=\s([0-9A-Za-z]{1,}).*.\n.*.buildActionMask\s=\s([0-9A-Za-z]{1,}).*.\n.*.files\s=\s\(\n\s+([\s\S]*?(?=\n.*\);))'
-    regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
+  def self.resources_phase(lines)
+    resources = []
+    value_extractor = SafeValueExtractor.new
 
-    section_lines.scan(regexp).map do |data|
-      PBXResourcesBuildPhase.new(data[0], data[1], data[2], data[3].split(/\s*,\s*/), 0)
+    section_lines = SectionHighlighter.section_lines(lines, PBXSectionName::PBXResourcesBuildPhase)
+    regexp = Regexp.new(PBXRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
+
+    section_lines.scan(regexp).each do |match|
+      reference = match[0].delete("\r\t\n ")
+      reference_comment = match[1].delete("\r\t\n")
+
+      subsection = match[2]
+
+      isa = value_extractor.value(subsection,
+                                  PBXRegexp::ISA,
+                                  DefaultValue::STRING)
+
+      build_action_mask = value_extractor.value(subsection,
+                                                PBXRegexp::BUILD_ACTION_MASK,
+                                                -1)
+
+      files = []
+      files_lines = value_extractor.value(subsection,
+                                          PBXRegexp::FILES_LIST,
+                                          DefaultValue::STRING)
+      files_lines.scan(Regexp.new(PBXRegexp::LIST_FILE_REFERENCE, Regexp::IGNORECASE)) { |match|
+        file_reference = match[0].delete("\r\t\n ")
+        file_reference_comment = match[1]
+        file_location = match[2]
+        files.push ListFileReference.new(file_reference,
+                                         file_reference_comment,
+                                         file_location)
+      }
+
+      run_only_for_deployment_postprocessing = value_extractor.value(subsection,
+                                                                     PBXRegexp::RUN_ONLY_FOR_DEPLOYMENT_POSTPROCESSING,
+                                                                     0)
+
+      resources.push PBXResourcesBuildPhase.new(reference,
+                                                reference_comment,
+                                                isa,
+                                                build_action_mask,
+                                                files,
+                                                run_only_for_deployment_postprocessing)
     end
+
+    resources
   end
 
   # @return [PBXBuildPhase]
-  def self.shell_scripts(section_lines)
-    # .0: reference
-    # .1: build_file_name
-    # .2: isa
-    # .3: file_ref
-    # .4: settings (currently always nil)
-    regexp_str = '([0-9A-Za-z]{1,}).\/\*.([0-9A-Za-z]{1,}.*).in.*.isa\s=\s([0-9A-Za-z]{1,}).\sfileRef\s=\s([0-9A-Za-z]{1,})'
-    regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
-
-    section_lines.scan(regexp).map do |data|
-      PBXShellScriptBuildPhase.new(data[0], data[1], data[2], data[3], data[4],
-                                   data[5], data[6], data[7], data[8], data[9])
-    end
+  def self.shell_scripts(_lines)
+    nil
   end
 
   # @return [PBXBuildPhase]
-  def self.sources(section_lines)
-    # .0: reference
-    # .1: isa
-    # .2: build_action_mask
-    # .3: files
-    # .4: @run_only_for_deployment_postprocessing (currently always 0)
-    regexp_str = '([0-9A-Za-z]{1,}).*\n.*.isa\s=\s([0-9A-Za-z]{1,}).*.\n.*.buildActionMask\s=\s([0-9A-Za-z]{1,}).*.\n.*.files\s=\s\(\n\s+([\s\S]*?(?=\n.*\);))'
-    regexp = Regexp.new(regexp_str, Regexp::IGNORECASE)
+  def self.sources(lines)
+    sources = []
+    value_extractor = SafeValueExtractor.new
 
-    section_lines.scan(regexp).map do |data|
-      PBXSourcesBuildPhase.new(data[0], data[1], data[2], data[3].map(&:strip), 0)
+    section_lines = SectionHighlighter.section_lines(lines, PBXSectionName::PBXSourcesBuildPhase)
+    regexp = Regexp.new(PBXRegexp::SINGLE_ELEMENT_SUBSECTION, Regexp::IGNORECASE)
+
+    section_lines.scan(regexp).each do |match|
+      reference = match[0].delete("\r\t\n ")
+      reference_comment = match[1].delete("\r\t\n")
+
+      subsection = match[2]
+
+      isa = value_extractor.value(subsection,
+                                  PBXRegexp::ISA,
+                                  DefaultValue::STRING)
+
+      build_action_mask = value_extractor.value(subsection,
+                                                PBXRegexp::BUILD_ACTION_MASK,
+                                                -1)
+
+      files = []
+      files_lines = value_extractor.value(subsection,
+                                          PBXRegexp::FILES_LIST,
+                                          DefaultValue::STRING)
+
+      files_lines.scan(Regexp.new(PBXRegexp::LIST_FILE_REFERENCE, Regexp::IGNORECASE)) { |match|
+        file_reference = match[0].delete("\r\t\n ")
+        file_reference_comment = match[1]
+        file_location = match[2]
+        files.push ListFileReference.new(file_reference,
+                                         file_reference_comment,
+                                         file_location)
+      }
+
+      run_only_for_deployment_postprocessing = value_extractor.value(subsection,
+                                                                     PBXRegexp::RUN_ONLY_FOR_DEPLOYMENT_POSTPROCESSING,
+                                                                     0)
+
+      sources.push PBXSourcesBuildPhase.new(reference,
+                                            reference_comment,
+                                            isa,
+                                            build_action_mask,
+                                            files,
+                                            run_only_for_deployment_postprocessing)
     end
+
+    sources
   end
 
   private_class_method :apple_scripts,

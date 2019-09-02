@@ -22,14 +22,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require_relative 'safe_value_extractor'
+class SafeValueExtractor
+  # Safety extracting value via regular expression.
+  # @return result value or default value
+  def value(lines, regexp_string, default_value)
+    result = default_value
+    regexp = Regexp.new(regexp_string, Regexp::IGNORECASE)
 
-class SectionHighlighter
-  # Highlight specific section lines from .pbxproj file lines.
-  # @return [String]
-  def self.section_lines(pbxproj_lines, section_name)
-    value_extractor = SafeValueExtractor.new
-    regexp_string = "\/\*.Begin.#{section_name}.section.*.((\n.*){1,})...End.#{section_name}.section.\*\/"
-    value_extractor.value(pbxproj_lines, regexp_string, DefaultValue::STRING)
+    if lines =~ regexp
+      result = lines.match(regexp)[0]
+    end
+
+    result
+  end
+
+  def trimmed_value(value, mask)
+    value.delete(mask)
   end
 end

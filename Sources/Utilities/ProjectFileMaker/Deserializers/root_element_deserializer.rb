@@ -23,4 +23,5 @@
 # SOFTWARE.
 
 class RootElementDeserializer
+
 end
