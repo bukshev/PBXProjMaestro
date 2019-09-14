@@ -22,31 +22,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-require_relative '../Utilities/ProjectFileMaker/Common/project_file_maker'
-require_relative '../../Sources/Utilities/FileFinder/physical_file_finder'
-require_relative '../../Sources/Utilities/FileFinder/pbx_project_file_finder'
-require_relative '../Utilities/TargetFilesIntersector/target_files_intersector'
+require '../../Sources/Model/ProjectFile/project_file'
+require '../Utilities/ProjectFileMaker/Common/project_file_maker'
+require '../Utilities/FileFinder/pbx_files_finder'
+require '../Utilities/FileFinder/physical_files_finder'
+require '../Services/FilesExistenceMathcer/files_existence_matcher'
+require '../Services/TargetFilesDuplicatesFinder/target_files_duplicates_finder'
+require '../Services/TargetFilesIntersector/target_files_intersector'
 
-file_path = '/Users/travismurdoc/Documents/Projects/Ruby/PBXProjMaestro/Resources/Qpay.xcodeproj/project.pbxproj'
-project_file = ProjectFileMaker.new.project_file(file_path)
+project_file_maker = ProjectFileMaker.new
+# project_file_path = '/Users/travismurdoc/Desktop/Dev/qpay-ios/Qpay/Qpay.xcodeproj/project.pbxproj'
+project_file_path = '/Users/travismurdoc/Desktop/qpay-ios/Qpay/Qpay.xcodeproj/project.pbxproj'
+project_file = project_file_maker.project_file project_file_path
 
-intersector = TargetFilesIntersector.new
+project_root_directory_path = '/Users/travismurdoc/Desktop/Dev/qpay-ios/Qpay/Qpay'
+targets_with_pathways = {
+  'Qpay-DEV' => '/Users/travismurdoc/Desktop/qpay-ios/Qpay/Qpay',
+  'Qpay-PUB' => '/Users/travismurdoc/Desktop/qpay-ios/Qpay/Qpay',
+  'QpayTests' => '/Users/travismurdoc/Desktop/qpay-ios/Qpay/QpayTests',
+  'QpayAppTests' => '/Users/travismurdoc/Desktop/qpay-ios/Qpay/QpayAppTests',
+  'QpayUITests' => '/Users/travismurdoc/Desktop/qpay-ios/Qpay/QpayUITests'
+}
 
-intersector.intersect_targets(%w[Qpay-DEV Qpay-PUB], project_file)
+pbx_files_finder = PBXFilesFinder.new project_file
+physical_files_finder = PhysicalFilesFinder.new(project_root_directory_path, targets_with_pathways)
 
-root_path = '/Users/travismurdoc/Desktop/Common/qpay-ios/Qpay/Qpay'
+files_existence_matcher = FilesExistenceMatcher.new(pbx_files_finder, physical_files_finder)
+target_files_duplicates_finder = TargetFilesDuplicatesFinder.new
+target_files_intersector = TargetFilesIntersector.new
 
-# physical_file_finder = PhysicalFileFinder.new(root_path)
-# pbx_project_file_finder = PBXProjectFileFinder.new(project_file)
-#
-# all_physical_files = physical_file_finder.all_files_names
-# all_pbx_project_files = pbx_project_file_finder.all_files_names
-#
-# puts all_physical_files.size
-# puts all_pbx_project_files.size
-#
-# puts (all_physical_files - all_pbx_project_files).size
-# puts (all_pbx_project_files - all_physical_files).size
-
-# puts physical_file_finder.file_exists_in_project?('TransferPaymentResultRepository.swift')
-# puts pbx_project_file_finder.file_exists_in_project?('TransferPaymentResultRepository.swift')
+# files_existence_matcher.match_files project_file
+# target_files_duplicates_finder.find_duplicates project_file
+target_files_intersector.intersect_targets project_file

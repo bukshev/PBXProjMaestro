@@ -94,7 +94,7 @@ class PBXNativeTarget
     @build_phases = build_phases
     @build_rules = build_rules
     @dependencies = dependencies
-    @name = name
+    @name = name ? reference_comment : name
     @product_install_path = product_install_path
     @product_name = product_name
     @product_reference = product_reference

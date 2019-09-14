@@ -24,27 +24,32 @@
 
 require_relative '../../Model/ProjectFile/project_file'
 
-class PBXProjectFileFinder
-  attr_reader :project_file
+class TargetFilesDuplicatesFinder
+  # @param [ProjectFile] project_file
+  def find_duplicates(project_file)
+    project_file.target.native_targets.each do |t|
+      sources_metaphase = t.build_phases.find { |f| f.file_name == 'Sources' }
+      build_phase = project_file.build_phase.sources_build_phases.find do |f|
+        f.reference == sources_metaphase.reference
+      end
+      files = build_phase.files.map(&:file_name)
 
-  def initialize(project_file)
-    @project_file = project_file
+      puts '------------------------------------'
+      puts "Summary for #{t.name} target:"
+      puts find_duplicate_names(files)
+      puts '------------------------------------'
+    end
   end
 
-  def all_files_names
-    project_file
-      .build_files
-      .map(&:build_file_name)
-      .filter { |name| ['.m', '.swift', ''].include?(File.extname(name)) }
-  end
+  def find_duplicate_names(file_names)
+    map = {}
+    duplicates = []
 
-  def file_exists_in_project?(file_name)
-    # TODO: Replace PBXBuildFile with actual files sources.
-    project_file
-      .build_files
-      .map(&:build_file_name)
-      .include?(file_name)
-  end
+    file_names.each do |element|
+      map[element] = (map[element] || 0) + 1
+      duplicates << element if map[element] == 2
+    end
 
-  # def file_exists_in_relative_directory?(file_name, relative_directory_path); end
+    duplicates
+  end
 end

@@ -29,11 +29,11 @@ class PBXTarget
   attr_reader :aggregate_targets
 
   # @!attribute [r] legacy_targets
-  #   @return [List of PBXLegacyTarget]
+  #   @return [PBXLegacyTarget]
   attr_reader :legacy_targets
 
   # @!attribute [r] native_targets
-  #   @return [List of PBXNativeTarget]
+  #   @return [[PBXNativeTarget]]
   attr_reader :native_targets
 
   def initialize(aggregate_targets, legacy_targets, native_targets)
